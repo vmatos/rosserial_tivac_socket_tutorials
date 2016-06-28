@@ -47,6 +47,15 @@ rosserial_add_client_target(buttons buttons.axf ALL)
 rosserial_add_client_target(buttons flash)
 rosserial_add_client_target(buttons size)
 
+# Custom message - Button subscriber
+rosserial_configure_client(
+  DIRECTORY leds
+  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
+)
+rosserial_add_client_target(leds leds.axf ALL)
+rosserial_add_client_target(leds flash)
+rosserial_add_client_target(leds size)
+
 # freeRTOS example
 rosserial_configure_client(
   DIRECTORY freertos

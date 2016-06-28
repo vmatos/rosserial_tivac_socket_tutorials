@@ -3,9 +3,9 @@
  *  Copyright (c) 2016
  *  Author: Vitor Matos
  *
- *  rosserial_tivac_socket buttons tutorial
+ *  rosserial_tivac_socket buttons subscriber tutorial
  *
- *  On this demo your TivaC Connected Launchpad will publish the user 
+ *  On this demo your TivaC Connected Launchpad will subscribe the user 
  * buttons state on the topic '/button_state'.
  *  This tutorial demonstrates the use of a custom message Buttons.msg
  *
@@ -19,7 +19,7 @@
 extern "C"
 {
   #include <driverlib/sysctl.h>
-  #include "buttons.h"
+  #include <drivers/pinout.h>
 }
 // ROS includes
 #include <ros.h>
@@ -29,8 +29,18 @@ extern "C"
 // ROS nodehandle
 ros::NodeHandle nh;
 
-rosserial_tivac_socket_tutorials::Buttons button_msg;
-ros::Publisher button_publisher("button_state", &button_msg);
+void button_cb(const rosserial_tivac_socket_tutorials::Buttons& msg)
+{
+  if (msg.sw1.data) {
+    LEDWrite(CLP_D2, CLP_D2);
+    UARTprintf("Turn on\n");
+  }
+  if (msg.sw2.data) {
+    LEDWrite(CLP_D2, 0);
+    UARTprintf("Turn off\n");
+  }
+}
+ros::Subscriber<rosserial_tivac_socket_tutorials::Buttons> button_subscriber("button_state", &button_cb);
 
 int main(void)
 {
@@ -42,25 +52,15 @@ int main(void)
   MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN |
                           SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480), TM4C129FREQ);
 
-  uint8_t button_debounced_delta;
-  uint8_t button_raw_state;
-  ButtonsInit();
-
+  // Setup LED pins
+  PinoutSet(1, 0);
+  
   // ROS nodehandle initialization and topic registration
-  nh.initNode("192.168.1.140");
-  nh.advertise(button_publisher);
+  nh.initNode((char *)"192.168.1.140");
+  nh.subscribe(button_subscriber);
 
   while (1)
   {
-    if (nh.connected())
-    {
-      uint8_t button_debounced_state = ButtonsPoll(&button_debounced_delta, &button_raw_state);
-      // Publish message to be transmitted.
-      button_msg.sw1.data = button_debounced_state & LEFT_BUTTON;
-      button_msg.sw2.data = button_debounced_state & RIGHT_BUTTON;
-      button_publisher.publish(&button_msg);
-    }
-
     // Handle all communications and callbacks.
     nh.spinOnce();
 
