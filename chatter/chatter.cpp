@@ -42,7 +42,7 @@ int main(void)
 
   // ROS nodehandle initialization and topic registration
   // Nodehandle will connect to IP
-  nh.initNode("192.168.1.135");
+  nh.initNode(ROS_SERVER_IP);
   nh.advertise(chatter);
 
   while (1)
